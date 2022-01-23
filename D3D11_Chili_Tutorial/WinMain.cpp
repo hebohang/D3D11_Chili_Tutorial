@@ -1,11 +1,27 @@
 #include <Windows.h>
+#include "WindowsMessageMap.h"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	static WindowsMessageMap mm;
+	OutputDebugStringA(mm(msg, lParam, wParam).c_str());
+
 	switch (msg)
 	{
 	case WM_CLOSE:
 		PostQuitMessage(69);  // 把退出消息送往消息队列，自定义 69 代表关闭应用进程
+		break;
+	case WM_KEYDOWN:
+		if (wParam == 'F')
+		{
+			SetWindowText(hWnd, L"Press F");
+		}
+		break;
+	case WM_KEYUP:
+		if (wParam == 'F')
+		{
+			SetWindowText(hWnd, L"Release F");
+		}
 		break;
 	default:
 		break;
