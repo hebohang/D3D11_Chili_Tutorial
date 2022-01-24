@@ -19,7 +19,7 @@
 ******************************************************************************************/
 #pragma once
 
-// target Windows 7 or later
+// target Windows 10 or later
 #define _WIN32_WINNT 0x0A00
 #include <sdkddkver.h>
 // The following #defines disable a bunch of unused windows stuff. If you 
