@@ -17,8 +17,7 @@
 *	You should have received a copy of the GNU General Public License					  *
 *	along with The Chili Direct3D Engine.  If not, see <http://www.gnu.org/licenses/>.    *
 ******************************************************************************************/
-#include "Window.h"
-#include <sstream>
+#include "App.h"
 
 
 int CALLBACK WinMain(
@@ -29,44 +28,7 @@ int CALLBACK WinMain(
 {
 	try
 	{
-		Window wnd(800, 300, "Donkey Fart Box");
-
-		MSG msg;
-		BOOL gResult;
-		while ((gResult = GetMessage(&msg, nullptr, 0, 0)) > 0)
-		{
-			// TranslateMessage will post auxilliary WM_CHAR messages from key msgs
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-
-			// test code
-			while (!wnd.mouse.IsEmpty())
-			{
-				const auto e = wnd.mouse.Read();
-				switch (e.GetType())
-				{
-				case Mouse::Event::Type::Leave:
-					wnd.SetTitle("Gone!");
-					break;
-				case Mouse::Event::Type::Move:
-				{
-					std::ostringstream oss;
-					oss << "Mouse moved to (" << e.GetPosX() << "," << e.GetPosY() << ")";
-					wnd.SetTitle(oss.str());
-				}
-				break;
-				}
-			}
-		}
-
-		// check if GetMessage call itself borked
-		if (gResult == -1)
-		{
-			throw CHWND_LAST_EXCEPT();
-		}
-
-		// wParam here is the value passed to PostQuitMessage
-		return msg.wParam;
+		return App{}.Go();
 	}
 	catch (const ChiliException& e)
 	{
