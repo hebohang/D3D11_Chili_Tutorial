@@ -9,51 +9,54 @@
 #include "ChiliMath.h"
 #include "Surface.h"
 #include "GDIPlusManager.h"
+#include "imgui/imgui.h"
+
+namespace dx = DirectX;
 
 GDIPlusManager gdipm;
 
 App::App()
 	:
-	wnd(800, 600, "The Donkey Fart Box")
+	wnd( 800,600,"The Donkey Fart Box" )
 {
 	class Factory
 	{
 	public:
-		Factory(Graphics& gfx)
+		Factory( Graphics& gfx )
 			:
-			gfx(gfx)
+			gfx( gfx )
 		{}
 		std::unique_ptr<Drawable> operator()()
 		{
-			switch (typedist(rng))
+			switch( typedist( rng ) )
 			{
 			case 0:
 				return std::make_unique<Pyramid>(
-					gfx, rng, adist, ddist,
-					odist, rdist
-					);
+					gfx,rng,adist,ddist,
+					odist,rdist
+				);
 			case 1:
 				return std::make_unique<Box>(
-					gfx, rng, adist, ddist,
-					odist, rdist, bdist
-					);
+					gfx,rng,adist,ddist,
+					odist,rdist,bdist
+				);
 			case 2:
 				return std::make_unique<Melon>(
-					gfx, rng, adist, ddist,
-					odist, rdist, longdist, latdist
-					);
+					gfx,rng,adist,ddist,
+					odist,rdist,longdist,latdist
+				);
 			case 3:
 				return std::make_unique<Sheet>(
-					gfx, rng, adist, ddist,
-					odist, rdist
-					);
+					gfx,rng,adist,ddist,
+					odist,rdist
+				);
 			case 4:
 				return std::make_unique<SkinnedBox>(
-					gfx, rng, adist, ddist,
-					odist, rdist
-					);
+					gfx,rng,adist,ddist,
+					odist,rdist
+				);
 			default:
-				assert(false && "bad drawable type in factory");
+				assert( false && "bad drawable type in factory" );
 				return {};
 			}
 		}
@@ -70,21 +73,36 @@ App::App()
 		std::uniform_int_distribution<int> typedist{ 0,4 };
 	};
 
-	drawables.reserve(nDrawables);
-	std::generate_n(std::back_inserter(drawables), nDrawables, Factory{ wnd.Gfx() });
+	drawables.reserve( nDrawables );
+	std::generate_n( std::back_inserter( drawables ),nDrawables,Factory{ wnd.Gfx() } );
 
-	wnd.Gfx().SetProjection(DirectX::XMMatrixPerspectiveLH(1.0f, 3.0f / 4.0f, 0.5f, 40.0f));
+	wnd.Gfx().SetProjection( dx::XMMatrixPerspectiveLH( 1.0f,3.0f / 4.0f,0.5f,40.0f ) );
 }
 
 void App::DoFrame()
 {
-	const auto dt = timer.Mark();
-	wnd.Gfx().ClearBuffer(0.07f, 0.0f, 0.12f);
-	for (auto& d : drawables)
+	const auto dt = timer.Mark() * speed_factor;
+	wnd.Gfx().BeginFrame( 0.07f,0.0f,0.12f );
+	wnd.Gfx().SetCamera( cam.GetMatrix() );
+
+	for( auto& d : drawables )
 	{
-		d->Update(wnd.kbd.KeyIsPressed(VK_SPACE) ? 0.0f : dt);
-		d->Draw(wnd.Gfx());
+		d->Update( wnd.kbd.KeyIsPressed( VK_SPACE ) ? 0.0f : dt );
+		d->Draw( wnd.Gfx() );
 	}
+
+	// imgui window to control simulation speed
+	if( ImGui::Begin( "Simulation Speed" ) )
+	{
+		ImGui::SliderFloat( "Speed Factor",&speed_factor,0.0f,4.0f );
+		ImGui::Text( "%.3f ms/frame (%.1f FPS)",1000.0f / ImGui::GetIO().Framerate,ImGui::GetIO().Framerate );
+		ImGui::Text( "Status: %s",wnd.kbd.KeyIsPressed( VK_SPACE ) ? "PAUSED" : "RUNNING (hold spacebar to pause)" );
+	}
+	ImGui::End();
+	// imgui window to control camera
+	cam.SpawnControlWindow();
+
+	// present
 	wnd.Gfx().EndFrame();
 }
 
@@ -94,10 +112,10 @@ App::~App()
 
 int App::Go()
 {
-	while (true)
+	while( true )
 	{
 		// process all messages pending, but to not block for new messages
-		if (const auto ecode = Window::ProcessMessages())
+		if( const auto ecode = Window::ProcessMessages() )
 		{
 			// if return optional has value, means we're quitting so return exit code
 			return *ecode;
